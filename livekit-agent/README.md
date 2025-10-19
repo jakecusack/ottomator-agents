@@ -1,212 +1,337 @@
-# LiveKit Voice Agent
+# LiveKit Voice AI Agent - Complete Tutorial
 
-A LiveKit-powered voice AI agent framework that demonstrates how to build realtime conversational AI with MCP (Model Context Protocol) server integration.
+A comprehensive LiveKit-powered voice AI agent framework demonstrating how to build production-ready realtime conversational AI. This project is based on the tutorial **"Build Your First Voice AI Agent in 20 Minutes with LiveKit"** and includes everything from basic setup to advanced features like custom tool integration and cloud deployment.
+
+## Overview
+
+Unlike "black box" voice AI platforms like Vapi, Synthflow, and Bland.ai, LiveKit provides an open-source Python framework that gives you complete control over your voice AI infrastructure, conversation logic, and custom tools. You can self-host or deploy to the cloud with full transparency and customization.
 
 ## Features
 
-- 🎤 Natural voice conversations with low latency
-- 🔄 Real-time voice interaction with interruption handling
-- 🛠️ Tool integration via MCP servers
-- 🎯 Multiple provider options (OpenAI, Deepgram, Cartesia, etc.)
-- 🔌 Extensible architecture for custom tools and agents
+- 🎤 **Natural Voice Conversations** - Low latency, real-time voice interaction
+- 🔄 **Interruption Handling** - Seamless conversation flow with turn detection
+- 🛠️ **Custom Tools** - Extend functionality with Python functions
+- 🎯 **Multiple AI Providers** - Mix and match STT, LLM, and TTS providers
+- 🔌 **MCP Integration** - Connect to Model Context Protocol servers
+- 📱 **Multi-Platform** - Works in terminal, browser, phone, and native apps
+- ☁️ **Cloud Ready** - Easy deployment to LiveKit Cloud
+- 🧪 **Testing Modes** - Console, dev, and production modes
+
+## What You'll Learn
+
+This tutorial demonstrates:
+
+1. **Basic Agent Creation** - Set up a simple voice agent with minimal code
+2. **Custom Tool Integration** - Add Python functions as agent capabilities
+3. **Advanced Use Cases** - Build an Airbnb booking assistant with multi-turn conversations
+4. **Cloud Deployment** - Deploy your agent to LiveKit Cloud for production use
 
 ## Prerequisites
 
+### Required Software
 - Python 3.9 or later
-- API Keys:
-  - OpenAI API key
-  - Deepgram API key
-  - LiveKit credentials (optional - only if deploying to LiveKit Cloud)
+- UV package manager (recommended) or pip
 
-## Quick Start
+### Required API Keys
+- **OpenAI API Key** - For LLM and TTS ([Get it here](https://platform.openai.com/api-keys))
+- **Deepgram API Key** - For STT ([Get it here](https://console.deepgram.com/))
 
-### 1. Install Dependencies
+### Optional (for Cloud Deployment)
+- **LiveKit Cloud Account** - Free tier available ([Sign up here](https://cloud.livekit.io/))
+- **LiveKit CLI** - For deployment management
+
+## Quick Start (20 Minutes)
+
+### Step 1: Install Dependencies (2 minutes)
 
 ```bash
-# Install dependencies using UV
+# Install UV package manager if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install project dependencies
 uv sync
 ```
 
-### 2. Set Up Environment Variables
+### Step 2: Configure Environment (3 minutes)
 
-Copy `.env.example` to `.env` and fill in your credentials:
+Copy the example environment file and add your API keys:
 
 ```bash
 cp .env.example .env
 ```
 
-**Required variables:**
-- `OPENAI_API_KEY` - OpenAI API key
-- `DEEPGRAM_API_KEY` - Deepgram API key
-
-**Optional for LiveKit Cloud deployment:**
-- `LIVEKIT_URL` - LiveKit server URL
-- `LIVEKIT_API_KEY` - LiveKit API key
-- `LIVEKIT_API_SECRET` - LiveKit API secret
-
-### 3. Download Required Model Files
-
-Before first run, download the required model files (Silero VAD, turn detector):
+Edit `.env` and add your credentials:
 
 ```bash
-# Download model files for basic agent
+# Required
+OPENAI_API_KEY=your_openai_api_key_here
+DEEPGRAM_API_KEY=your_deepgram_api_key_here
+
+# Optional (for cloud deployment)
+LIVEKIT_URL=your_livekit_url
+LIVEKIT_API_KEY=your_livekit_api_key
+LIVEKIT_API_SECRET=your_livekit_api_secret
+```
+
+### Step 3: Download Model Files (2 minutes)
+
+Download required models for voice activity detection and turn detection:
+
+```bash
+# For basic agent
 uv run python livekit_basic_agent.py download-files
 
-# Download model files for MCP agent
+# For MCP agent (if using)
 uv run python livekit_mcp_agent.py download-files
 ```
 
-### 4. Run the Agent
+### Step 4: Run Your First Agent (1 minute)
+
+Start the agent in console mode to test locally:
 
 ```bash
-# Basic agent (minimal configuration)
 uv run python livekit_basic_agent.py console
-
-# MCP agent (with MCP server integration)
-uv run python livekit_mcp_agent.py console
-
-# Development mode (connects to LiveKit - optional)
-uv run python livekit_basic_agent.py dev
-
-# Production mode
-uv run python livekit_basic_agent.py start
 ```
+
+You can now speak to your agent directly in the terminal! Try asking:
+- "What time is it?"
+- "Search for Airbnbs in San Francisco"
+- "Book the cozy downtown loft for John Smith from January 15 to January 20"
+
+### Step 5: Test in Browser (5 minutes)
+
+Run in development mode to access from anywhere:
+
+```bash
+uv run python livekit_basic_agent.py dev
+```
+
+Visit the [LiveKit Agents Playground](https://agents-playground.livekit.io/) to interact with your agent in a web browser.
+
+### Step 6: Deploy to Cloud (7 minutes)
+
+See the [Cloud Deployment](#cloud-deployment) section below for detailed instructions.
 
 ## Architecture
 
+### Voice Pipeline
+
+The agent uses a modular pipeline that processes voice in real-time:
+
 ```
-┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│   LiveKit   │──b─▶│ Voice Agent  │───▶│ MCP Servers │
-│   Client    │     │              │     │   (Tools)   │
-└─────────────┘     └──────────────┘     └─────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │             │
-              ┌─────▼────┐  ┌────▼─────┐
-              │ Deepgram │  │  OpenAI  │
-              │   STT    │  │ LLM/TTS  │
-              └──────────┘  └──────────┘
+User Speech → STT → LLM → TTS → Agent Voice
+              ↓      ↓     ↓
+           Deepgram OpenAI OpenAI
 ```
 
-## Project Files
+### Component Flow
 
-### Basic Agent
+```
+┌─────────────────┐
+│  User Interface │  (Terminal, Browser, Phone, App)
+└────────┬────────┘
+         │ WebRTC
+┌────────▼────────┐
+│  LiveKit Room   │  (Real-time communication)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│  Voice Agent    │  (Your Python code)
+├─────────────────┤
+│ • STT Engine    │  (Speech-to-Text)
+│ • LLM Brain     │  (Language Model)
+│ • TTS Engine    │  (Text-to-Speech)
+│ • VAD           │  (Voice Activity Detection)
+│ • Turn Detector │  (Conversation Flow)
+│ • Custom Tools  │  (Your Functions)
+└────────┬────────┘
+         │
+┌────────▼────────┐
+│  AI Providers   │  (OpenAI, Deepgram, etc.)
+└─────────────────┘
+```
 
-**`livekit_basic_agent.py`** - The simplest possible LiveKit voice agent
-- Minimal configuration with only essential components
-- Great for learning and testing basic functionality
-- Requires only OpenAI and Deepgram API keys
-- Includes example tool: `get_current_date_and_time`
+## Project Structure
 
-### MCP Agent
+```
+livekit-agent/
+├── livekit_basic_agent.py      # Tutorial example with Airbnb tools
+├── livekit_mcp_agent.py        # Advanced agent with MCP integration
+├── pyproject.toml              # Python dependencies
+├── .env.example                # Environment template
+├── .env                        # Your credentials (create this)
+├── README.md                   # This file
+├── CLAUDE.md                   # Additional documentation
+└── uv.lock                     # Dependency lock file
+```
 
-**`livekit_mcp_agent.py`** - Full-featured voice agent with:
-- Configurable speech-to-text, LLM, and text-to-speech providers
-- MCP server integration for tool calling
-- Multilingual turn detection
-- Event handling and state management
-- Logging and metrics support
+## Understanding the Code
 
-## Voice Pipeline Configuration
+### Basic Agent Structure
 
-The agent uses a modular voice pipeline with swappable components:
+Every LiveKit agent has three main components:
 
-### Speech-to-Text (STT)
-- **Default**: Deepgram Nova-2 (highest accuracy)
-- Alternatives: AssemblyAI, Azure Speech, Whisper
-
-### Large Language Model (LLM)
-- **Default**: OpenAI GPT-4.1-mini (fast, cost-effective)
-- Alternatives: Anthropic Claude, Google Gemini, Groq
-
-### Text-to-Speech (TTS)
-- **Default**: OpenAI Echo voice (natural, versatile)
-- Alternatives: Cartesia (fastest), ElevenLabs (highest quality)
-
-### Voice Activity Detection (VAD)
-- **Default**: Silero VAD (reliable voice detection)
-
-### Turn Detection
-- **Default**: Multilingual Model (natural conversation flow)
-- Alternatives: Semantic model, VAD-based
-
-## MCP Server Integration
-
-The agent supports integration with MCP (Model Context Protocol) servers for extending functionality with custom tools.
-
-### Configuring MCP Servers
-
-In `livekit_mcp_agent.py`:
+#### 1. The Assistant Class
 
 ```python
-session = AgentSession(
-    # ... other config ...
-    mcp_servers=[
-        mcp.MCPServerHTTP(url="http://localhost:8089/mcp")
-    ]
-)
+from livekit.agents import Agent, RunContext
+from livekit.agents.llm import function_tool
+
+class Assistant(Agent):
+    def __init__(self):
+        super().__init__(
+            instructions="You are a helpful voice assistant..."
+        )
+    
+    @function_tool
+    async def your_custom_tool(self, context: RunContext, param: str) -> str:
+        """Tool description for the LLM."""
+        # Your tool logic here
+        return "Result"
+```
+
+#### 2. The Entry Point
+
+```python
+async def entrypoint(ctx: agents.JobContext):
+    # Configure voice pipeline
+    session = AgentSession(
+        stt=deepgram.STT(model="nova-2"),
+        llm=openai.LLM(model="gpt-4.1-mini"),
+        tts=openai.TTS(voice="echo"),
+        vad=silero.VAD.load(),
+    )
+    
+    # Start the session
+    await session.start(room=ctx.room, agent=Assistant())
+    
+    # Initial greeting
+    await session.generate_reply(
+        instructions="Greet the user warmly."
+    )
+```
+
+#### 3. The Main Runner
+
+```python
+if __name__ == "__main__":
+    agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
 ```
 
 ### Adding Custom Tools
 
-You can also add tools directly to your agent using the `@function_tool` decorator:
+Tools are Python functions decorated with `@function_tool`. The LLM automatically learns to use them based on the function signature and docstring:
 
 ```python
-from livekit.agents import function_tool, RunContext
-from datetime import datetime
-
-class Assistant(Agent):
-    @function_tool
-    async def get_current_time(self, context: RunContext) -> str:
-        """Get the current time."""
-        return datetime.now().strftime("%I:%M %p")
+@function_tool
+async def search_airbnbs(self, context: RunContext, city: str) -> str:
+    """Search for available Airbnbs in a city.
+    
+    Args:
+        city: The city name to search for Airbnbs
+    """
+    # Your search logic
+    return f"Found listings in {city}..."
 ```
 
-## Development
+**Key Points:**
+- The docstring tells the LLM what the tool does
+- Type hints define the parameters
+- The LLM decides when to call the tool based on user input
+- Return values are passed back to the LLM to formulate a response
 
-### Project Structure
+## Voice Pipeline Configuration
 
+### Speech-to-Text (STT) Options
+
+```python
+# Deepgram (Default - Best accuracy)
+stt=deepgram.STT(model="nova-2")
+
+# AssemblyAI (Alternative)
+stt=assemblyai.STT(model="universal-streaming")
+
+# Whisper (Local option)
+stt=whisper.STT()
 ```
-livekit-agent/
-├── livekit_basic_agent.py   # Basic example agent
-├── livekit_mcp_agent.py     # MCP-enabled agent
-├── pyproject.toml           # Dependencies
-├── .env.example             # Environment template
-├── Dockerfile               # Container deployment
-└── README.md
+
+### Large Language Model (LLM) Options
+
+```python
+# OpenAI (Default)
+llm=openai.LLM(model="gpt-4.1-mini")
+
+# Anthropic Claude
+llm=anthropic.LLM(model="claude-3-5-sonnet")
+
+# Google Gemini
+llm=google.LLM(model="gemini-2.0-flash")
 ```
 
-### Installing Additional Providers
+### Text-to-Speech (TTS) Options
+
+```python
+# OpenAI (Default - Natural)
+tts=openai.TTS(voice="echo")
+
+# Cartesia (Fastest)
+tts=cartesia.TTS(voice="sonic-2")
+
+# ElevenLabs (Highest quality)
+tts=elevenlabs.TTS(voice="rachel")
+```
+
+## Running Modes
+
+### Console Mode (Local Testing)
+
+Best for development and testing without internet connectivity:
 
 ```bash
-# Additional TTS providers
-uv add livekit-plugins-cartesia livekit-plugins-elevenlabs
-
-# Additional LLM providers
-uv add livekit-plugins-anthropic livekit-plugins-google livekit-plugins-groq
-
-# Additional STT providers
-uv add livekit-plugins-assemblyai livekit-plugins-azure
+uv run python livekit_basic_agent.py console
 ```
 
-## Deploy to LiveKit Cloud
+- Runs entirely on your machine
+- Uses your microphone and speakers
+- No LiveKit server required
+- Great for debugging
 
-Once you've tested your agent locally, deploy it to LiveKit Cloud for production use:
+### Dev Mode (Cloud Testing)
 
-### 1. Create a LiveKit Cloud Account
+Connects to LiveKit Cloud for browser-based testing:
 
-Sign up at [LiveKit Cloud](https://cloud.livekit.io/)
-
-### 2. Install the LiveKit CLI
-
-Choose the installation method for your platform:
-
-**Windows:**
 ```bash
-winget install LiveKit.LiveKitCLI
+uv run python livekit_basic_agent.py dev
 ```
 
-**Mac:**
+- Agent runs locally but connects to LiveKit
+- Access from [Agents Playground](https://agents-playground.livekit.io/)
+- Test from any device with a browser
+- See real-time logs and metrics
+
+### Start Mode (Production)
+
+Runs the agent in production mode:
+
+```bash
+uv run python livekit_basic_agent.py start
+```
+
+- Production-ready configuration
+- Optimized for performance
+- Suitable for deployment
+
+## Cloud Deployment
+
+Deploy your agent to LiveKit Cloud for production use:
+
+### 1. Create LiveKit Cloud Account
+
+Sign up for a free account at [cloud.livekit.io](https://cloud.livekit.io/)
+
+### 2. Install LiveKit CLI
+
+**macOS:**
 ```bash
 brew install livekit
 ```
@@ -216,108 +341,277 @@ brew install livekit
 curl -sSL https://get.livekit.io/ | bash
 ```
 
-### 3. Authenticate with LiveKit Cloud
+**Windows:**
+```bash
+winget install LiveKit.LiveKitCLI
+```
 
-Open a new terminal and authenticate:
+### 3. Authenticate
 
 ```bash
 lk cloud auth
 ```
 
-### 4. Configure Environment Variables
+This opens a browser to link your CLI with your LiveKit Cloud account.
 
-Set up your environment variables for the cloud:
+### 4. Configure Environment
 
 ```bash
 lk app env -w
 ```
 
-This will write your LiveKit credentials to `.env.local`
+This creates `.env.local` with your LiveKit credentials.
 
-### 5. Start Your Agent
-
-Run your agent connected to LiveKit Cloud:
-
-```bash
-uv run python livekit_basic_agent.py start
-```
-
-### 6. Create an Agent in LiveKit Cloud
-
-In a separate terminal, register your agent:
+### 5. Deploy Agent
 
 ```bash
 lk agent create
 ```
 
-### 7. Test in the Playground
+This command:
+- Creates a `Dockerfile` for your agent
+- Builds and pushes the container
+- Registers the agent with LiveKit Cloud
+- Makes it available for production use
 
-Visit the [LiveKit Agents Playground](https://agents-playground.livekit.io/) and sign in with your LiveKit organization to test your agent in the browser.
+### 6. Test in Playground
 
-### 8. Telephony Integration (Optional)
+Visit [agents-playground.livekit.io](https://agents-playground.livekit.io/) and sign in to test your deployed agent.
 
-To integrate your agent with phone calling systems, see the [LiveKit Telephony documentation](https://docs.livekit.io/agents/start/telephony/)
+## Example Use Cases
+
+### 1. Simple Date/Time Tool
+
+```python
+@function_tool
+async def get_current_date_and_time(self, context: RunContext) -> str:
+    """Get the current date and time."""
+    return datetime.now().strftime("%B %d, %Y at %I:%M %p")
+```
+
+**User:** "What time is it?"  
+**Agent:** "The current date and time is October 19, 2025 at 2:30 PM"
+
+### 2. Airbnb Search
+
+```python
+@function_tool
+async def search_airbnbs(self, context: RunContext, city: str) -> str:
+    """Search for available Airbnbs in a city."""
+    # Search logic
+    return f"Found {len(listings)} Airbnbs in {city}..."
+```
+
+**User:** "Find me some places to stay in San Francisco"  
+**Agent:** *Calls search_airbnbs("San Francisco")* "I found 3 Airbnbs in San Francisco..."
+
+### 3. Multi-Step Booking
+
+```python
+@function_tool
+async def book_airbnb(self, context: RunContext, airbnb_id: str, 
+                     guest_name: str, check_in_date: str, 
+                     check_out_date: str) -> str:
+    """Book an Airbnb."""
+    # Booking logic
+    return f"Booking confirmed! Confirmation: {conf_number}"
+```
+
+**Conversation:**
+- **User:** "I want to book the cozy downtown loft"
+- **Agent:** "Great choice! What's your name?"
+- **User:** "John Smith"
+- **Agent:** "When would you like to check in?"
+- **User:** "January 15th"
+- **Agent:** "And when will you check out?"
+- **User:** "January 20th"
+- **Agent:** *Calls book_airbnb(...)* "Your booking is confirmed!"
+
+## Advanced Features
+
+### MCP Server Integration
+
+Connect to Model Context Protocol servers for extended functionality:
+
+```python
+from livekit.agents import mcp
+
+session = AgentSession(
+    # ... other config ...
+    mcp_servers=[
+        mcp.MCPServerHTTP(url="http://localhost:8089/mcp")
+    ]
+)
+```
+
+See `livekit_mcp_agent.py` for a complete example.
+
+### Event Handling
+
+Listen to agent events for logging and monitoring:
+
+```python
+@session.on("agent_speech_committed")
+def on_speech_committed(msg):
+    print(f"Agent said: {msg.message}")
+
+@session.on("user_speech_committed")
+def on_user_speech(msg):
+    print(f"User said: {msg.message}")
+```
+
+### State Management
+
+Track conversation state across turns:
+
+```python
+class Assistant(Agent):
+    def __init__(self):
+        super().__init__(...)
+        self.user_preferences = {}
+        self.conversation_history = []
+```
 
 ## Performance Optimization
 
 ### Reduce Latency
-- Use regional deployments close to users
-- Choose faster providers (Deepgram for STT, Cartesia for TTS)
-- Use streaming where possible
+
+1. **Choose Fast Providers**
+   - STT: Deepgram Nova-2 or AssemblyAI
+   - TTS: Cartesia Sonic-2
+   - LLM: GPT-4.1-mini or Groq
+
+2. **Regional Deployment**
+   - Deploy close to your users
+   - Use LiveKit Cloud's global network
+
+3. **Streaming**
+   - All components stream by default
+   - Responses start before completion
 
 ### Scale Efficiently
-- Set appropriate prewarm counts in `livekit.toml` for production
-- Use connection pooling for external API calls
-- Implement caching for frequently accessed data
 
-## Console Mode Testing
+1. **Worker Configuration**
+   ```toml
+   # livekit.toml
+   [worker]
+   prewarm = 5  # Keep 5 workers ready
+   ```
 
-Console mode lets you test your agent locally without needing a LiveKit server:
+2. **Connection Pooling**
+   - Reuse API connections
+   - Cache frequently accessed data
 
-```bash
-# Test the basic agent
-uv run python livekit_basic_agent.py console
-
-# Test the MCP agent
-uv run python livekit_mcp_agent.py console
-```
-
-This will start an interactive console where you can speak to your agent using your microphone and speakers.
+3. **Resource Management**
+   - Monitor memory usage
+   - Set appropriate timeouts
 
 ## Troubleshooting
 
-### Python Version
-Ensure you're using Python 3.9 or later:
+### Common Issues
+
+#### Audio Not Working in Console Mode
+- Check microphone/speaker permissions
+- Verify audio devices in system settings
+- Try adjusting VAD sensitivity
+
+#### API Key Errors
 ```bash
-python --version
+# Verify keys are set
+cat .env | grep API_KEY
+
+# Check for extra whitespace
+# Keys should have no quotes or spaces
 ```
 
-### Model Downloads
-TTS models may download on first use, which can take time. The Docker image pre-downloads Silero VAD to speed up startup.
+#### Model Download Slow
+- First run downloads models (one-time)
+- Use `download-files` command beforehand
+- Check internet connection
 
-### API Key Issues
-- Verify all required API keys are set in `.env`
-- Check that API keys are valid and have sufficient credits
-- Ensure no extra whitespace in environment variable values
+#### Agent Not Responding
+- Check API credits/quotas
+- Verify all required keys are set
+- Look for errors in console output
 
-### Audio Issues in Console Mode
-- Check microphone/speaker permissions
-- Verify audio devices are correctly configured
-- Try adjusting VAD sensitivity if voice detection is problematic
+### Debug Mode
 
-## Environment Variables Reference
+Enable detailed logging:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OPENAI_API_KEY` | Yes | OpenAI API key for LLM/TTS |
-| `DEEPGRAM_API_KEY` | Yes | Deepgram API key for STT |
-| `LIVEKIT_URL` | No | LiveKit server URL (for deployment) |
-| `LIVEKIT_API_KEY` | No | LiveKit API key (for deployment) |
-| `LIVEKIT_API_SECRET` | No | LiveKit API secret (for deployment) |
-| `LLM_CHOICE` | No | Model selection (default: gpt-4.1-mini) |
-| `LOG_LEVEL` | No | Logging level (default: INFO) |
+```bash
+# Set in .env
+LOG_LEVEL=DEBUG
 
-## Resources
+# Or run with verbose flag
+uv run python livekit_basic_agent.py console --verbose
+```
 
-- [LiveKit Agents Documentation](https://docs.livekit.io/agents/)
+## Environment Variables
+
+| Variable | Required | Description | Default |
+|----------|----------|-------------|---------|
+| `OPENAI_API_KEY` | Yes | OpenAI API key | - |
+| `DEEPGRAM_API_KEY` | Yes | Deepgram API key | - |
+| `LIVEKIT_URL` | No* | LiveKit server URL | - |
+| `LIVEKIT_API_KEY` | No* | LiveKit API key | - |
+| `LIVEKIT_API_SECRET` | No* | LiveKit API secret | - |
+| `LLM_CHOICE` | No | LLM model name | `gpt-4.1-mini` |
+| `LOG_LEVEL` | No | Logging level | `INFO` |
+
+*Required for cloud deployment and dev mode
+
+## Additional Resources
+
+### Documentation
+- [LiveKit Agents Docs](https://docs.livekit.io/agents/)
 - [LiveKit Python SDK](https://github.com/livekit/agents)
+- [LiveKit Examples](https://github.com/livekit-examples/python-agents-examples)
+
+### Video Tutorial
+- [Build Your First Voice AI Agent in 20 Minutes](https://youtu.be/TXVyxJdlzQs)
+
+### Community
+- [LiveKit Discord](https://livekit.io/community)
+- [GitHub Discussions](https://github.com/livekit/agents/discussions)
+
+## Next Steps
+
+1. **Customize Your Agent**
+   - Modify the instructions to change personality
+   - Add your own custom tools
+   - Integrate with your backend services
+
+2. **Try Different Providers**
+   - Experiment with different LLMs
+   - Test various TTS voices
+   - Compare STT accuracy
+
+3. **Build Advanced Features**
+   - Add RAG for knowledge retrieval
+   - Implement multi-agent workflows
+   - Connect to external APIs
+
+4. **Deploy to Production**
+   - Set up monitoring and alerts
+   - Configure auto-scaling
+   - Implement telephony integration
+
+## Contributing
+
+This is part of the [Ottomator Agents](https://github.com/jakecusack/ottomator-agents) collection. Contributions are welcome!
+
+## License
+
+This project follows the license of the parent repository.
+
+## Support
+
+For issues and questions:
+- Check the [Troubleshooting](#troubleshooting) section
+- Review [LiveKit Documentation](https://docs.livekit.io/)
+- Join the [LiveKit Community](https://livekit.io/community)
+
+---
+
+**Built with ❤️ using LiveKit Agents**
+
